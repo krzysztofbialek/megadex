@@ -16,7 +16,7 @@ end
 
 def get_lunch
   res = Net::HTTP.get(MEGADEX_URL)
-  menu = retrieve_data(res)
+  menu = retrieve_data(res.force_encoding("UTF-8"))
   menu.to_s
 end
 
