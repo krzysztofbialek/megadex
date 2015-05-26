@@ -10,7 +10,7 @@ before do
   content_type :html, 'charset' => 'utf-8'
 end
 
-get '/hi' do
+get '/' do
   get_lunch
 end
 
