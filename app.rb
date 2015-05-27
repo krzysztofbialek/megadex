@@ -3,7 +3,7 @@ require "net/http"
 require 'uri'
 require 'byebug'
 
-MEGADEX_URL = URI('http://www.galeriasmaku.com.pl/zoliborz/admin/get.php')
+
 DAYS = {1 => 'pon', 2 => 'wt', 3 => 'sr', 4 => 'czw', 5 => 'pi'}
 
 before do
@@ -11,21 +11,51 @@ before do
 end
 
 get '/' do
-  get_lunch
+  get_lunch(params[:text])
 end
 
-def get_lunch
-  res = Net::HTTP.get(MEGADEX_URL)
-  menu = retrieve_data(res.force_encoding("UTF-8"))
-  menu.to_s
+def get_lunch(day = nil)
+  day_number = day.nil? ? Time.now.wday : day.to_i
+  menu = MegadexMenu.new
+  menu.for_date(DAYS[day_number])
 end
 
-def retrieve_data(res)
-  day = DAYS[Time.now.wday]
-  hash = prepare_hash(res)
-  menu_for_day = hash.select {|k,v| k =~ /^#{day}_/} 
-end
 
-def prepare_hash(h)
-  Hash[h.split('&').map{ |s| s.split('=')}]
+class MegadexMenu
+  MEAL_TYPES = {
+    "spec" => "danie specjalne",
+    "wege" => "danie wegetariańskie"
+  }
+
+  MEGADEX_URL = URI('http://www.galeriasmaku.com.pl/zoliborz/admin/get.php')
+  DAYS_PREFIXES = %w{pon wt sr czw pi}
+
+  def retrieve_data
+    res = Net::HTTP.get(MEGADEX_URL).force_encoding("UTF-8")
+      hash = prepare_hash(res)
+    end
+
+  def prepare_hash(h)
+    Hash[h.split('&').map{ |s| s.split('=')}]
+  end
+
+  def for_date(day=nil)
+    menu[day].map {|type, meal| "#{type}: #{meal}" }.join("\n")
+  end
+
+  def menu
+    @info ||= retrieve_data
+    @week ||= @info.delete("tydzien")
+    days = @info.group_by { |k, _| k.split("_").first }.map do |day, daily_menu|
+      next unless DAYS_PREFIXES.include?(day)
+      day_menu = daily_menu.map do |key, meal|
+        meal_type = key.split("_")[1..-1].join(" ")
+        meal_type = MEAL_TYPES[meal_type] || meal_type
+        [meal_type, meal]
+      end
+      [day, day_menu]
+    end
+    Hash[days.compact]
+  end
+
 end
