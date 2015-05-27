@@ -11,13 +11,13 @@ before do
 end
 
 get '/' do
-  get_lunch(params[:text])
+  day = params[:text].empty? ? Time.now.wday : params[:text].to_i
+  get_lunch(day)
 end
 
-def get_lunch(day = nil)
-  day_number = day.nil? ? Time.now.wday : day.to_i
+def get_lunch(day)
   menu = MegadexMenu.new
-  menu.for_date(DAYS[day_number])
+  menu.for_date(DAYS[day])
 end
 
 
