@@ -11,6 +11,8 @@ before do
 end
 
 get '/' do
+  response.headers['Access-Control-Allow-Origin'] = '*'
+
   day = params[:text].empty? ? Time.now.wday : params[:text].to_i
   get_lunch(day)
 end
