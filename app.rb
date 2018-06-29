@@ -29,13 +29,13 @@ class MegadexMenu
     "wege" => "danie wegetariańskie"
   }
 
-  MEGADEX_URL = URI('http://www.galeriasmaku.com.pl/zoliborz/admin/get.php')
+  MEGADEX_URL = URI('https://ember-handsaw.glitch.me/api')
   DAYS_PREFIXES = %w{pon wt sr czw pi}
 
   def retrieve_data
     res = Net::HTTP.get(MEGADEX_URL).force_encoding("UTF-8")
-      hash = prepare_hash(res)
-    end
+    hash = prepare_hash(res)
+  end
 
   def prepare_hash(h)
     Hash[h.split('&').map{ |s| s.split('=')}]
